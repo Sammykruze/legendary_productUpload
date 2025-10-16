@@ -16,20 +16,30 @@ public class ProductController {
     private ProductService productService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> createProduct(
+    public ResponseEntity<?> createProduct(
             @RequestParam String name,
             @RequestParam String description,
             @RequestParam Double price,
             @RequestParam MultipartFile image) {
+
         try {
             Product product = new Product();
             product.setName(name);
             product.setDescription(description);
             product.setPrice(price);
+
             Product savedProduct = productService.saveProduct(product, image);
             return ResponseEntity.ok(savedProduct);
+
+        } catch (IllegalArgumentException e) {
+            //Handle validation errors (like invalid price)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: " + e.getMessage());
+
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            //Handle file-related errors with specific messages
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("File error: " + e.getMessage());
         }
     }
 }
